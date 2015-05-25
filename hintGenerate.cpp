@@ -85,8 +85,6 @@ int main(int argc, char *argv[])
     uint offset = log2(blockSize);
     uint bufferLength = associativity * lookaheadScale;
 
-    vector<uint> *setAccessTrace = (vector<uint>*)malloc(sizeof(vector<uint>)*noOfSets);
-    assert(setAccessTrace!=NULL);
     bufferNode **buffer = (bufferNode**)malloc(sizeof(bufferNode*)*noOfSets);
     assert(buffer!=NULL);
     for(int i=0;i<noOfSets;++i)
@@ -113,7 +111,6 @@ int main(int argc, char *argv[])
     	count1++;
     	blockId = addr >> offset;
     	setIndex = blockId & ((1<<setsInPowerOfTwo)-1);
-    	setAccessTrace[setIndex].push_back(blockId);
 
         node *temp = createNode(false);
         if(list == NULL)
@@ -127,23 +124,31 @@ int main(int argc, char *argv[])
             ptr = ptr->next;
         }
             
-
         bool found = false;
-        int i=0;
-        for(i=0;i<bufferLength;++i)
+        int index=0;
+        for(int i=0;i<bufferLength;++i)
         {
             if(buffer[setIndex][i].valid && buffer[setIndex][i].blockId == blockId)
             {
+                index = i;
                 found = true;
                 break;
             }
         }
         if(found)
         {
-            buffer[setIndex][i].ref->hint = true;
-            buffer[setIndex][i].ref = temp;
-            buffer[setIndex][i].age = 0;
-            for(int k=0;k<bufferLength&&k!=i;++k) buffer[setIndex][i].age++;
+            buffer[setIndex][index].ref->hint = true;
+            buffer[setIndex][index].ref = temp;
+            buffer[setIndex][index].age = 0;
+            for(int i=0;i<bufferLength&&i!=index;++i)
+            {
+                if(buffer[setIndex][i].valid)
+                {
+                    buffer[setIndex][i].age++;
+                    if(buffer[setIndex][i].age >= bufferLength)
+                       buffer[setIndex][i].valid = false;
+                }
+            } 
         }
         else
         {
@@ -153,12 +158,14 @@ int main(int argc, char *argv[])
                 if(!buffer[setIndex][i].valid)
                 {
                     victimIdx = i;
-                    buffer[setIndex][i].age = 0;
-                    buffer[setIndex][i].blockId = blockId;
-                    buffer[setIndex][i].ref = temp;
-                    buffer[setIndex][i].valid = true;
+                    break;
                 }
             }
+            buffer[setIndex][victimIdx].age = 0;
+            buffer[setIndex][victimIdx].blockId = blockId;
+            buffer[setIndex][victimIdx].ref = temp;
+            buffer[setIndex][victimIdx].valid = true;
+            
             for(int i=0;i<bufferLength&&i!=victimIdx;++i)
             {
                 if(buffer[setIndex][i].valid)
@@ -180,41 +187,16 @@ int main(int argc, char *argv[])
     
     cout<<"Total processed: "<<(count2*1000000+count1)<<endl;
 
-
-    string dumpFileName = string("dump/").append(benchmark).append(".").append(toString(mode*512)).append("KB.dump");
-    ofstream df;
-    df.open(dumpFileName.c_str());
-    vector<uint>::iterator it;
-    uint c;
     
     string hintFileName = string("hints/").append(benchmark).append("_hint.binary");
     FILE *out;
     out = fopen(hintFileName.c_str(),"wb");
     assert(out!=NULL);
-
-    for(int i=0;i<noOfSets;++i)
-    {
-    	c = 0;
-    	df<<"================   SET "<<i<<"   ================\n";
-    	for(it=setAccessTrace[i].begin();it!=setAccessTrace[i].end();++it)
-    	{
-    		df<<setw(10)<<(*it);
-    		c++;
-    		if(c==4)
-    		{
-    			df<<endl;
-    			c=0;
-    		}
-    	}
-    	df<<endl<<endl;
-    }
     
     dumpLL(list,out);
 
     fclose(out);
     fclose(fp);
-    df.flush();
-    df.close();
 
     return 0;
 }

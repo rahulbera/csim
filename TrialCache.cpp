@@ -41,7 +41,7 @@ void TrialCache::promotion(uint setIndex, uint wayIndex, bool isLive)
 
 uint TrialCache::victimize(uint setIndex)
 {
-    uint maxAgeIndex, maxAge = 0; 
+    uint maxAgeIndex=0, maxAge = 0; 
     
     for(int i=0;i<associativity;++i)
     {

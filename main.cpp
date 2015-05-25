@@ -79,8 +79,9 @@ int main(int argc, char** argv)
     //VRRIPCache vrripCache12       = VRRIPCache(8,64*B,CACHE_SIZE_SCALE*mode,3,12);
     //SRRIPCache srripCache4        = SRRIPCache(8,64*B,CACHE_SIZE_SCALE*mode,4);
     //OptCache optCache               = OptCache(16,64*B,CACHE_SIZE_SCALE*mode);
+    cout<<"CHECKPOINT 1"<<endl;
     TrialCache trialCache             = TrialCache(16,64*B,CACHE_SIZE_SCALE*mode);
-    
+    cout<<"CHECKPOINT 2"<<endl;
     
     FILE *fp,*opt,*hint;    
     uint addr,age;
@@ -94,7 +95,7 @@ int main(int argc, char** argv)
     hint = fopen(hintFilePath.c_str(),"rb");
     assert(hint!=NULL);
     
-    
+    cout<<"CHECKPOINT 3"<<endl;
     
     while(  fread(&addr,sizeof(uint),1,fp) && !feof(fp) && !ferror(fp) /*&&
             fread(&age,sizeof(uint),1,opt) && !feof(opt) && !ferror(opt)*/ &&
@@ -134,7 +135,8 @@ int main(int argc, char** argv)
         }
     }
     
-    
+    cout<<"CHECKPOINT 4"<<endl;
+
     ofstream df;
     
     df.open(string("dump/").append(benchmark).append(".").append(toString(512*mode)).append("KB.dump").c_str());
