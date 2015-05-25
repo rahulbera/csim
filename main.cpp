@@ -15,6 +15,7 @@
 #include "VRRIPCache.h"
 #include "OptCache.h"
 #include "DRRIPCache.h"
+#include "TrialCache.h"
 #define B 1
 #define KB 1024*B
 #define MB 1024*KB
@@ -46,11 +47,16 @@ int main(int argc, char** argv)
     preprocessFilePath += benchmark;
     preprocessFilePath += "_opt.binary";
     
+    string hintFilePath = "hints/";
+    hintFilePath += benchmark;
+    hintFilePath += "_hint.binary";
+        
     string reuseStatFilePath = "result/";
     reuseStatFilePath += benchmark;
     reuseStatFilePath += "_reuseStat.txt";
     
-    //LRUCache lruCache               = LRUCache(16,64*B,CACHE_SIZE_SCALE*mode);
+    
+    LRUCache lruCache                 = LRUCache(16,64*B,CACHE_SIZE_SCALE*mode);
     //LIPCachev2 lipCache             = LIPCachev2(16,64*B,CACHE_SIZE_SCALE*mode);
     //BIPCachev2 bipCache16           = BIPCachev2(16,64*B,CACHE_SIZE_SCALE*mode,16);
     //BIPCachev2 bipCache32           = BIPCachev2(16,64*B,CACHE_SIZE_SCALE*mode,32);
@@ -72,22 +78,30 @@ int main(int argc, char** argv)
     //VRRIPCache vrripCache10       = VRRIPCache(8,64*B,CACHE_SIZE_SCALE*mode,3,10);
     //VRRIPCache vrripCache12       = VRRIPCache(8,64*B,CACHE_SIZE_SCALE*mode,3,12);
     //SRRIPCache srripCache4        = SRRIPCache(8,64*B,CACHE_SIZE_SCALE*mode,4);
-    OptCache optCache               = OptCache(16,64*B,CACHE_SIZE_SCALE*mode);
+    //OptCache optCache               = OptCache(16,64*B,CACHE_SIZE_SCALE*mode);
+    TrialCache trialCache             = TrialCache(16,64*B,CACHE_SIZE_SCALE*mode);
     
-    FILE *fp,*opt;    
+    
+    FILE *fp,*opt,*hint;    
     uint addr,age;
+    bool isLive;
     ulong count1 = 0, count2 = 0;
     
     fp = fopen(binFilePath.c_str(),"rb");
     assert(fp!=NULL);
-    opt = fopen(preprocessFilePath.c_str(),"rb");
-    assert(opt!=NULL);
+    //opt = fopen(preprocessFilePath.c_str(),"rb");
+    //assert(opt!=NULL);
+    hint = fopen(hintFilePath.c_str(),"rb");
+    assert(hint!=NULL);
     
-    while(  fread(&addr,sizeof(uint),1,fp) && !feof(fp) && !ferror(fp) &&
-            fread(&age,sizeof(uint),1,opt) && !feof(opt) && !ferror(opt))
+    
+    
+    while(  fread(&addr,sizeof(uint),1,fp) && !feof(fp) && !ferror(fp) /*&&
+            fread(&age,sizeof(uint),1,opt) && !feof(opt) && !ferror(opt)*/ &&
+            fread(&isLive,sizeof(bool),1,hint) && !feof(hint) && !ferror(hint))
     {
         count1++;
-        //lruCache.update(addr);
+        lruCache.update(addr);
         //lipCache.update(addr);
         //bipCache16.update(addr);
         //bipCache32.update(addr);
@@ -109,7 +123,9 @@ int main(int argc, char** argv)
         //vrripCache10.update(addr);
         //vrripCache12.update(addr);
         //srripCache4.update(addr);
-        optCache.update(addr,age);
+        //optCache.update(addr,age);
+        trialCache.update(addr,isLive);
+        
         if(count1==1000000)
         {
             cout<<"Processed: "<<(count2+1)*1000000<<endl;
@@ -118,30 +134,27 @@ int main(int argc, char** argv)
         }
     }
     
-    ofstream df,reuseFp,accessIvalFp;
+    
+    ofstream df;
     
     df.open(string("dump/").append(benchmark).append(".").append(toString(512*mode)).append("KB.dump").c_str());
     assert(df!=NULL);
-    reuseFp.open(string("result/").append(benchmark).append(".").append(toString(512*mode)).append("KB_reuseStat.dump").c_str());
-    assert(reuseFp!=NULL);
-    accessIvalFp.open(string("result/").append(benchmark).append(".").append(toString(512*mode)).append("KB_access.dump").c_str());
-    assert(accessIvalFp!=NULL);
     
-    /*SEPARATE(df,"LRU CACHE");
+    SEPARATE(df,"LRU CACHE");
     lruCache.dump(&df,VERBOSE);
     df<<endl<<endl;
-    SEPARATE(df,"LIP CACHE");
-    lipCache.dump(&df,VERBOSE);
-    df<<endl<<endl;
-    SEPARATE(df,"BIP_16 CACHE");
-    bipCache16.dump(&df,VERBOSE);
-    df<<endl<<endl;
-    SEPARATE(df,"BIP_32 CACHE");
-    bipCache32.dump(&df,VERBOSE);
-    df<<endl<<endl;
-    SEPARATE(df,"BIP_64 CACHE");
-    bipCache64.dump(&df,VERBOSE);
-    df<<endl<<endl;*/
+    //SEPARATE(df,"LIP CACHE");
+    //lipCache.dump(&df,VERBOSE);
+    //df<<endl<<endl;
+    //SEPARATE(df,"BIP_16 CACHE");
+    //bipCache16.dump(&df,VERBOSE);
+    //df<<endl<<endl;
+    //SEPARATE(df,"BIP_32 CACHE");
+    //bipCache32.dump(&df,VERBOSE);
+    //df<<endl<<endl;
+    //SEPARATE(df,"BIP_64 CACHE");
+    //bipCache64.dump(&df,VERBOSE);
+    //df<<endl<<endl;*/
     //SEPARATE(df,"DIP_32_8 CACHE");
     //dipCache8.dump(&df,VERBOSE);
     //df<<endl<<endl;
@@ -193,20 +206,21 @@ int main(int argc, char** argv)
     //SEPARATE(df,"SRRIP_4bit CACHE");
     //srripCache4.dump(&df,VERBOSE);
     //df<<endl<<endl;
-    SEPARATE(df,"OPT CACHE");
-    optCache.dump(&df,VERBOSE);
+    //SEPARATE(df,"OPT CACHE");
+    //optCache.dump(&df,VERBOSE);
+    //df<<endl<<endl;
+    SEPARATE(df,"TRIAL CACHE");
+    trialCache.dump(&df,VERBOSE);
     df<<endl<<endl;
-    optCache.dumpReuseStat(&reuseFp,OPT_VERBOSE);
-    optCache.dumpAccessIntervalStat(&accessIvalFp,OPT_VERBOSE); 
+    
     
     
     df.flush();    
     df.close();    
-    reuseFp.close();
-    accessIvalFp.close();
     
     fclose(fp);
-    fclose(opt);
+    //fclose(opt);
+    fclose(hint);
     
     //testCache();
     
