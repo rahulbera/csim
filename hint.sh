@@ -2,10 +2,12 @@ BENCHMARK=(perlbench bzip2 gcc cactusADM leslie3d soplex hmmer libquantum omnetp
 
 if [ $# != 2 ]
 then
-	echo "Usage: ./preprocess.sh <benchmark_name> <lookahead_length>"
+	echo "Usage: ./hint.sh <benchmark_name> <mode> <lookahead_length>"
 else
 	PROG=$1
-	SCALE=$2
+	MODE=$2
+	SCALE=$3
+
 
 	if [ ${PROG} == "all" ]
 	then
@@ -13,12 +15,12 @@ else
 		for i in "${BENCHMARK[@]}"
 		do
 			echo ">> Preprocessing: $i"
-			./hintgenerator $i ${SCALE}
+			./hintgenerator $i ${MODE} ${SCALE}
 			sleep 2
 		done
 	else
 		echo ">> Preprocessing: ${PROG}"
-		./hintgenerator ${PROG} ${SCALE}
+		./hintgenerator ${PROG} ${MODE} ${SCALE}
 	fi
 fi
 

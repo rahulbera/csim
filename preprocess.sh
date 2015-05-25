@@ -22,5 +22,5 @@ else
 fi
 
 
-speaker-test -t sine -f 1000 -l 1 -r 180000 &> /dev/null
+#speaker-test -t sine -f 1000 -l 1 -r 180000 &> /dev/null
 
