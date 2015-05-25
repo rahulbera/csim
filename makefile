@@ -4,6 +4,9 @@ MAIN = main.cpp
 PREPROCESS = preprocess.cpp
 HINTGENERATOR = hintGenerate.cpp
 OBJDIR = obj/
+PREPROCESSDIR = preprocess/
+HINTDIR = hints/
+DUMPDIR = dump/
 
 all: preprocessor hintgenerator csim
 	
@@ -14,6 +17,9 @@ csim: dir $(MAIN) $(CORE)
 
 dir:
 	@mkdir -p $(OBJDIR)
+	@mkdir -p $(DUMPDIR)
+	@mkdir -p $(PREPROCESSDIR)
+	@mkdir -p $(HINTDIR)	
 
 %.o: %.cpp 
 	@echo "Making $@..."
