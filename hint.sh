@@ -1,6 +1,6 @@
 BENCHMARK=(perlbench bzip2 gcc cactusADM leslie3d soplex hmmer libquantum omnetpp sphinx3 xalancbmk)
 
-if [ $# != 2 ]
+if [ $# != 3 ]
 then
 	echo "Usage: ./hint.sh <benchmark_name> <mode> <lookahead_length>"
 else
