@@ -1,4 +1,4 @@
-BENCHMARK=(perlbench bzip2 gcc cactusADM leslie3d soplex hmmer libquantum omnetpp sphinx3 xalancbmk)
+BENCHMARK=(perlbench bzip2 gcc mcf cactusADM leslie3d soplex hmmer libquantum lbm omnetpp sphinx3 xalancbmk)
 
 if [ $# != 3 ]
 then
