@@ -70,7 +70,7 @@ int main(int argc, char** argv)
     //SRRIPCache srripCache4          = SRRIPCache(16,64*B,CACHE_SIZE_SCALE*mode,4);
     //SRRIPCache srripCache5          = SRRIPCache(16,64*B,CACHE_SIZE_SCALE*mode,5);
     //DRRIPCache drripCache2          = DRRIPCache(16,64*B,CACHE_SIZE_SCALE*mode,2,32,10);
-    //DRRIPCache drripCache3          = DRRIPCache(16,64*B,CACHE_SIZE_SCALE*mode,3,32,10);
+    DRRIPCache drripCache3          = DRRIPCache(16,64*B,CACHE_SIZE_SCALE*mode,3,32,10);
     //SRRIPCachev2 srripCachev2_2   = SRRIPCachev2(8,64*B,CACHE_SIZE_SCALE*mode,2);
     //SRRIPCachev2 srripCachev2_3   = SRRIPCachev2(8,64*B,CACHE_SIZE_SCALE*mode,3);
     //SRRIPCachev3 srripCachev3_3   = SRRIPCachev3(8,64*B,CACHE_SIZE_SCALE*mode,3);
@@ -78,10 +78,9 @@ int main(int argc, char** argv)
     //VRRIPCache vrripCache10       = VRRIPCache(8,64*B,CACHE_SIZE_SCALE*mode,3,10);
     //VRRIPCache vrripCache12       = VRRIPCache(8,64*B,CACHE_SIZE_SCALE*mode,3,12);
     //SRRIPCache srripCache4        = SRRIPCache(8,64*B,CACHE_SIZE_SCALE*mode,4);
-    //OptCache optCache               = OptCache(16,64*B,CACHE_SIZE_SCALE*mode);
-    cout<<"CHECKPOINT 1"<<endl;
     TrialCache trialCache             = TrialCache(16,64*B,CACHE_SIZE_SCALE*mode);
-    cout<<"CHECKPOINT 2"<<endl;
+    OptCache optCache               = OptCache(16,64*B,CACHE_SIZE_SCALE*mode);
+    
     
     FILE *fp,*opt,*hint;    
     uint addr,age;
@@ -90,15 +89,14 @@ int main(int argc, char** argv)
     
     fp = fopen(binFilePath.c_str(),"rb");
     assert(fp!=NULL);
-    //opt = fopen(preprocessFilePath.c_str(),"rb");
-    //assert(opt!=NULL);
+    opt = fopen(preprocessFilePath.c_str(),"rb");
+    assert(opt!=NULL);
     hint = fopen(hintFilePath.c_str(),"rb");
     assert(hint!=NULL);
     
-    cout<<"CHECKPOINT 3"<<endl;
     
-    while(  fread(&addr,sizeof(uint),1,fp) && !feof(fp) && !ferror(fp) /*&&
-            fread(&age,sizeof(uint),1,opt) && !feof(opt) && !ferror(opt)*/ &&
+    while(  fread(&addr,sizeof(uint),1,fp) && !feof(fp) && !ferror(fp) &&
+            fread(&age,sizeof(uint),1,opt) && !feof(opt) && !ferror(opt) &&
             fread(&isLive,sizeof(bool),1,hint) && !feof(hint) && !ferror(hint))
     {
         count1++;
@@ -116,16 +114,16 @@ int main(int argc, char** argv)
         //srripCache4.update(addr);
         //srripCache5.update(addr);
         //drripCache2.update(addr);
-        //drripCache3.update(addr);
+        drripCache3.update(addr);
         //srripCachev2_2.update(addr);
         //srripCachev2_3.update(addr);
         //srripCachev3_3.update(addr);
         //vrripCache8.update(addr);
         //vrripCache10.update(addr);
         //vrripCache12.update(addr);
-        //srripCache4.update(addr);
-        //optCache.update(addr,age);
+        //srripCache4.update(addr);        
         trialCache.update(addr,isLive);
+        optCache.update(addr,age);
         
         if(count1==1000000)
         {
@@ -135,7 +133,6 @@ int main(int argc, char** argv)
         }
     }
     
-    cout<<"CHECKPOINT 4"<<endl;
 
     ofstream df;
     
@@ -184,9 +181,9 @@ int main(int argc, char** argv)
     //SEPARATE(df,"DRRIP_2bit CACHE");
     //drripCache2.dump(&df,VERBOSE);
     //df<<endl<<endl;
-    //SEPARATE(df,"DRRIP_3bit CACHE");
-    //drripCache3.dump(&df,VERBOSE);
-    //df<<endl<<endl;
+    SEPARATE(df,"DRRIP_3bit CACHE");
+    drripCache3.dump(&df,VERBOSE);
+    df<<endl<<endl;
     //SEPARATE(df,"SRRIPv2_2bit CACHE");
     //srripCachev2_2.dump(&df,VERBOSE);
     //df<<endl<<endl;
@@ -208,12 +205,13 @@ int main(int argc, char** argv)
     //SEPARATE(df,"SRRIP_4bit CACHE");
     //srripCache4.dump(&df,VERBOSE);
     //df<<endl<<endl;
-    //SEPARATE(df,"OPT CACHE");
-    //optCache.dump(&df,VERBOSE);
-    //df<<endl<<endl;
     SEPARATE(df,"TRIAL CACHE");
     trialCache.dump(&df,VERBOSE);
     df<<endl<<endl;
+    SEPARATE(df,"OPT CACHE");
+    optCache.dump(&df,VERBOSE);
+    df<<endl<<endl;
+    
     
     
     
@@ -221,7 +219,7 @@ int main(int argc, char** argv)
     df.close();    
     
     fclose(fp);
-    //fclose(opt);
+    fclose(opt);
     fclose(hint);
     
     //testCache();
